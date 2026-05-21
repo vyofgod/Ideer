@@ -256,7 +256,9 @@ impl Onboarding {
     }
 
     fn handle_open_account(_: &OpenAccount, _: &mut Window, cx: &mut App) {
-        cx.open_url(&zed_urls::account_url(cx))
+        if let Some(url) = zed_urls::account_url(cx) {
+            cx.open_url(&url);
+        }
     }
 
     fn render_page(&mut self, cx: &mut Context<Self>) -> AnyElement {
@@ -314,7 +316,7 @@ impl Render for Onboarding {
                                             .child(
                                                 v_flex()
                                                     .child(
-                                                        Headline::new("Welcome to Zed")
+                                                        Headline::new("Welcome to Ideer")
                                                             .size(HeadlineSize::Small),
                                                     )
                                                     .child(

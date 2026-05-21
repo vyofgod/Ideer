@@ -1818,8 +1818,21 @@ impl ProtoClient for Client {
     }
 }
 
-/// prefix for the zed:// url scheme
+/// Primary URL scheme for Ideer deep links (e.g. `ideer://agent/...`).
+pub const IDEER_URL_SCHEME: &str = "ideer";
+
+/// Legacy URL scheme accepted for backwards compatibility with upstream
+/// Zed deep links (e.g. `zed://agent/...`). Existing user data, shared
+/// links, and external integrations may still use this prefix; new
+/// links are emitted with [`IDEER_URL_SCHEME`].
 pub const ZED_URL_SCHEME: &str = "zed";
+
+/// Returns the URL schemes Ideer recognizes for deep links, with the
+/// primary scheme first. Use this when registering schemes with the OS
+/// or matching incoming URLs.
+pub fn url_schemes() -> &'static [&'static str] {
+    &[IDEER_URL_SCHEME, ZED_URL_SCHEME]
+}
 
 /// A parsed Zed link that can be handled internally by the application.
 #[derive(Debug, Clone, PartialEq, Eq)]

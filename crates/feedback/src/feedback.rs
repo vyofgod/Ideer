@@ -1,5 +1,5 @@
 use extension_host::ExtensionStore;
-use gpui::{App, ClipboardItem, PromptLevel, actions};
+use gpui::{App, ClipboardItem, PromptLevel, Window, actions};
 use system_specs::{CopySystemSpecsIntoClipboard, SystemSpecs};
 use util::ResultExt;
 use workspace::Workspace;
@@ -8,41 +8,28 @@ use zed_actions::feedback::{EmailZed, FileBugReport, RequestFeature};
 actions!(
     zed,
     [
-        /// Opens the Zed repository on GitHub.
+        /// Opens the Ideer repository on GitHub.
         OpenZedRepo,
         /// Copies installed extensions to the clipboard for bug reports.
         CopyInstalledExtensionsIntoClipboard
     ]
 );
 
-const ZED_REPO_URL: &str = "https://github.com/zed-industries/zed";
-
-const REQUEST_FEATURE_URL: &str = "https://github.com/zed-industries/zed/discussions/new/choose";
-
-fn file_bug_report_url(specs: &SystemSpecs) -> String {
-    format!(
-        concat!(
-            "https://github.com/zed-industries/zed/issues/new",
-            "?",
-            "template=10_bug_report.yml",
-            "&",
-            "environment={}"
-        ),
-        urlencoding::encode(&specs.to_string())
-    )
-}
-
-fn email_zed_url(specs: &SystemSpecs) -> String {
-    format!(
-        concat!("mailto:hi@zed.dev", "?", "body={}"),
-        email_body(specs)
-    )
-}
-
-fn email_body(specs: &SystemSpecs) -> String {
-    let body = format!("\n\nSystem Information:\n\n{}", specs);
-    urlencoding::encode(&body).to_string()
-}
+// TODO(ideer-rename): Ideer does not have its own bug tracker,
+// feature request system, support email, or public repository URL
+// yet. The `RequestFeature`, `FileBugReport`, `EmailZed`, and
+// `OpenZedRepo` actions remain registered for backwards
+// compatibility (so existing keybindings and command-palette
+// entries do not error), but their handlers now show an
+// "unavailable" prompt instead of opening upstream Zed pages.
+const FEEDBACK_UNAVAILABLE_TITLE: &str = "Feedback is not available yet";
+const FEEDBACK_UNAVAILABLE_BODY: &str = concat!(
+    "Ideer does not have its own bug tracker, feature request system, ",
+    "support email, or public repository URL yet. Once an Ideer-owned ",
+    "destination exists, these actions will reopen.\n\n",
+    "If you want to report a bug that also reproduces on upstream Zed, ",
+    "report it at github.com/zed-industries/zed."
+);
 
 pub fn init(cx: &mut App) {
     cx.observe_new(|workspace: &mut Workspace, _, _| {
@@ -79,36 +66,30 @@ pub fn init(cx: &mut App) {
                     cx,
                 ));
             })
-            .register_action(|_, _: &RequestFeature, _, cx| {
-                cx.open_url(REQUEST_FEATURE_URL);
+            .register_action(|_, _: &RequestFeature, window, cx| {
+                show_feedback_unavailable(window, cx);
             })
-            .register_action(move |_, _: &FileBugReport, window, cx| {
-                let specs = SystemSpecs::new(window, cx);
-                cx.spawn_in(window, async move |_, cx| {
-                    let specs = specs.await;
-                    cx.update(|_, cx| {
-                        cx.open_url(&file_bug_report_url(&specs));
-                    })
-                    .log_err();
-                })
-                .detach();
+            .register_action(|_, _: &FileBugReport, window, cx| {
+                show_feedback_unavailable(window, cx);
             })
-            .register_action(move |_, _: &EmailZed, window, cx| {
-                let specs = SystemSpecs::new(window, cx);
-                cx.spawn_in(window, async move |_, cx| {
-                    let specs = specs.await;
-                    cx.update(|_, cx| {
-                        cx.open_url(&email_zed_url(&specs));
-                    })
-                    .log_err();
-                })
-                .detach();
+            .register_action(|_, _: &EmailZed, window, cx| {
+                show_feedback_unavailable(window, cx);
             })
-            .register_action(move |_, _: &OpenZedRepo, _, cx| {
-                cx.open_url(ZED_REPO_URL);
+            .register_action(|_, _: &OpenZedRepo, window, cx| {
+                show_feedback_unavailable(window, cx);
             });
     })
     .detach();
+}
+
+fn show_feedback_unavailable(window: &mut Window, cx: &mut App) {
+    drop(window.prompt(
+        PromptLevel::Info,
+        FEEDBACK_UNAVAILABLE_TITLE,
+        Some(FEEDBACK_UNAVAILABLE_BODY),
+        &["OK"],
+        cx,
+    ));
 }
 
 fn format_installed_extensions_for_clipboard(cx: &mut App) -> String {

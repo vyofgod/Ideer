@@ -1,18 +1,25 @@
+# TODO(ideer-rename): snap package `name`, app `command`, and
+# `common-id` still encode the upstream Zed identity. Renaming any of
+# them requires a new snapcraft.io registration. The `website`,
+# `source-code`, `issues`, and `contact` URLs point at the upstream
+# Zed repo until Ideer publishes its own equivalents (see PRODUCT_GAPS).
 name: zed
-title: Zed
+title: Ideer
 base: core24
 version: "$RELEASE_VERSION"
-summary: The editor for what's next
+summary: AI-first code editor (Ideer, a fork of Zed)
 description: |
-  Zed is a modern open-source code editor, built from the ground up in Rust with
-  a GPU-accelerated renderer. We help you build software faster than ever before.
+  Ideer is an AI-first code editor and a fork of Zed. It inherits the
+  Zed editor core and adds Ideer-specific agent and subagent workflows.
+  See README.md in the source repository for details and current
+  status.
 grade: stable
 confinement: classic
 compression: lzo
-website: https://zed.dev/
+website: https://github.com/zed-industries/zed
 source-code: https://github.com/zed-industries/zed
 issues: https://github.com/zed-industries/zed/issues
-contact: https://zed.dev/community-links#support-and-feedback
+contact: https://github.com/zed-industries/zed/issues
 
 parts:
   zed:
@@ -26,10 +33,10 @@ parts:
 
     stage-packages:
       - libasound2t64
-      # snapcraft has a lint that this is unused, but without it Zed exits with
+      # snapcraft has a lint that this is unused, but without it Ideer exits with
       # "Missing Vulkan entry points: LibraryLoadFailure" in wgpu.
       - libvulkan1
-      # snapcraft has a lint that this is unused, but without it Zed exits with
+      # snapcraft has a lint that this is unused, but without it Ideer exits with
       # "NoWaylandLib" when run with Wayland.
       - libwayland-client0
       - libxcb1

@@ -2,10 +2,14 @@
 AppId={#AppId}
 AppName={#AppName}
 AppVerName={#AppDisplayName}
-AppPublisher=Zed Industries
-AppPublisherURL=https://www.zed.dev/
-AppSupportURL=https://www.zed.dev/
-AppUpdatesURL=https://www.zed.dev/
+AppPublisher=Ideer Industries
+; TODO(ideer-rename): Replace the upstream Zed website with Ideer-owned
+; URLs once they exist. The Publisher/Support/Updates URLs below point
+; at the upstream Zed GitHub repository as the most honest available
+; destination for an Ideer pre-release build.
+AppPublisherURL=https://github.com/zed-industries/zed
+AppSupportURL=https://github.com/zed-industries/zed/issues
+AppUpdatesURL=https://github.com/zed-industries/zed/releases
 DefaultGroupName={#AppName}
 DisableProgramGroupPage=yes
 DisableReadyPage=yes
@@ -1255,7 +1259,13 @@ Root: HKCU; Subkey: "Software\Classes\Drive\shell\{#RegValueName}\command"; Valu
 ; Environment
 Root: HKCU; Subkey: "Environment"; ValueType: expandsz; ValueName: "Path"; ValueData: "{code:AddToPath|{app}\bin}"; Tasks: addtopath; Check: NeedsAddToPath(ExpandConstant('{app}\bin'))
 
-; URI Scheme
+; URI Scheme (Ideer)
+Root: HKCU; Subkey: "Software\Classes\ideer"; ValueType: "string"; ValueData: "URL:ideer Protocol"; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\Classes\ideer"; ValueType: "string"; ValueName: "URL Protocol"; ValueData: ""
+Root: HKCU; Subkey: "Software\Classes\ideer\DefaultIcon"; ValueType: "string"; ValueData: "{app}\Zed.exe,1"
+Root: HKCU; Subkey: "Software\Classes\ideer\shell\open\command"; ValueType: "string"; ValueData: """{app}\Zed.exe"" ""%1"""
+
+; URI Scheme (legacy upstream Zed compatibility)
 Root: HKCU; Subkey: "Software\Classes\zed"; ValueType: "string"; ValueData: "URL:zed Protocol"; Flags: uninsdeletekey
 Root: HKCU; Subkey: "Software\Classes\zed"; ValueType: "string"; ValueName: "URL Protocol"; ValueData: ""
 Root: HKCU; Subkey: "Software\Classes\zed\DefaultIcon"; ValueType: "string"; ValueData: "{app}\Zed.exe,1"

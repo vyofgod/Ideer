@@ -154,22 +154,31 @@ impl ZedAiOnboarding {
             .w_full()
             .relative()
             .gap_1()
-            .child(Headline::new("Welcome to Zed AI"))
+            .child(Headline::new("Welcome to Ideer AI"))
+            // TODO(ideer-rename): Ideer does not offer a hosted Pro
+            // plan or a trial. The disclaimer copy and the trial button
+            // below are kept as a thin placeholder so the panel still
+            // renders; the button no longer promises a trial.
             .child(
-                Label::new("Sign in to try Zed Pro for 14 days, no credit card required.")
-                    .color(Color::Muted)
-                    .mb_2(),
+                Label::new(
+                    "Ideer does not host its own AI service. \
+                     Configure an API key for OpenAI, Anthropic, Google, \
+                     OpenRouter, Ollama, LM Studio, or any other supported \
+                     provider in Settings.",
+                )
+                .color(Color::Muted)
+                .mb_2(),
             )
             .child(PlanDefinitions.pro_plan())
             .child(
-                Button::new("sign_in", "Try Zed Pro for Free")
+                Button::new("sign_in", "Sign In")
                     .disabled(signing_in)
                     .full_width()
                     .style(ButtonStyle::Tinted(ui::TintColor::Accent))
                     .on_click({
                         let callback = self.sign_in.clone();
                         move |_, window, cx| {
-                            telemetry::event!("Start Trial Clicked", state = "pre-sign-in");
+                            telemetry::event!("Sign In Clicked", state = "pre-sign-in");
                             callback(window, cx)
                         }
                     }),
@@ -184,7 +193,7 @@ impl ZedAiOnboarding {
                 .relative()
                 .min_w_0()
                 .gap_1()
-                .child(Headline::new("Welcome to Zed AI"))
+                .child(Headline::new("Welcome to Ideer AI"))
                 .child(YoungAccountBanner)
                 .child(
                     v_flex()
@@ -211,7 +220,9 @@ impl ZedAiOnboarding {
                                         "Upgrade To Pro Clicked",
                                         state = "young-account"
                                     );
-                                    cx.open_url(&zed_urls::upgrade_to_zed_pro_url(cx))
+                                    if let Some(url) = zed_urls::upgrade_to_zed_pro_url(cx) {
+                                        cx.open_url(&url);
+                                    }
                                 }),
                         ),
                 )
@@ -221,7 +232,7 @@ impl ZedAiOnboarding {
                 .w_full()
                 .relative()
                 .gap_1()
-                .child(Headline::new("Welcome to Zed AI"))
+                .child(Headline::new("Welcome to Ideer AI"))
                 .child(
                     v_flex()
                         .mt_2()
@@ -273,7 +284,9 @@ impl ZedAiOnboarding {
                                         "Start Trial Clicked",
                                         state = "post-sign-in"
                                     );
-                                    cx.open_url(&zed_urls::start_trial_url(cx))
+                                    if let Some(url) = zed_urls::start_trial_url(cx) {
+                                        cx.open_url(&url);
+                                    }
                                 }),
                         ),
                 )
@@ -287,7 +300,7 @@ impl ZedAiOnboarding {
             .relative()
             .gap_1()
             .child(Self::pro_trial_stamp(cx))
-            .child(Headline::new("Welcome to the Zed Pro Trial"))
+            .child(Headline::new("Welcome to the Ideer Pro Trial"))
             .child(
                 Label::new("Here's what you get for the next 14 days:")
                     .color(Color::Muted)
@@ -304,7 +317,7 @@ impl ZedAiOnboarding {
             .relative()
             .gap_1()
             .child(Self::certified_user_stamp(cx))
-            .child(Headline::new("Welcome to Zed Pro"))
+            .child(Headline::new("Welcome to Ideer Pro"))
             .child(
                 Label::new("Here's what you get:")
                     .color(Color::Muted)
@@ -321,7 +334,7 @@ impl ZedAiOnboarding {
             .relative()
             .gap_1()
             .child(Self::business_stamp(cx))
-            .child(Headline::new("Welcome to Zed Business"))
+            .child(Headline::new("Welcome to Ideer Business"))
             .child(
                 Label::new("Here's what you get:")
                     .color(Color::Muted)
@@ -338,7 +351,7 @@ impl ZedAiOnboarding {
             .relative()
             .gap_1()
             .child(Self::student_stamp(cx))
-            .child(Headline::new("Welcome to Zed Student"))
+            .child(Headline::new("Welcome to Ideer Student"))
             .child(
                 Label::new("Here's what you get:")
                     .color(Color::Muted)

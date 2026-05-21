@@ -23,6 +23,19 @@
   // 5. "SublimeText"
   // 6. "TextMate"
   "base_keymap": "VSCode",
+  // Ideer workspace layout preset chosen during onboarding.
+  //
+  // Possible values:
+  //
+  // 1. "vscode_familiar" — VS Code / Cursor / Windsurf-style shell:
+  //    left activity bar, file tree anchored on the left, AI panel
+  //    anchored on the right, terminal docked at the bottom.
+  // 2. "zed_native" — upstream Zed layout. No left activity bar,
+  //    command-palette-first ergonomics.
+  //
+  // When unset, Ideer behaves as `zed_native` to preserve upstream
+  // Zed behavior for users who have not run onboarding.
+  "ideer.layout_preset": null,
   // The name of a font to use for rendering text in the editor
   // ".ZedMono" currently aliases to Lilex
   // but this may change in the future.
@@ -1472,9 +1485,17 @@
   //
   // Default: false
   "disable_ai": false,
-  // Automatically update Zed. This setting may be ignored on Linux if
-  // installed through a package manager.
-  "auto_update": true,
+  // Automatically check for and install application updates.
+  //
+  // Disabled by default in Ideer: there is no Ideer-owned update
+  // server yet, and the upstream Zed update endpoint is not a valid
+  // destination for Ideer builds. The auto-update poller will not run
+  // while this is `false`. To rebuild Ideer, pull and rebuild this
+  // repository from source.
+  //
+  // This setting may also be ignored on Linux if installed through a
+  // package manager.
+  "auto_update": false,
   // How to render LSP `textDocument/documentColor` colors in the editor.
   //
   // Possible values:

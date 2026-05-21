@@ -132,6 +132,19 @@ pub struct SettingsContent {
     /// Default: VSCode
     pub base_keymap: Option<BaseKeymapContent>,
 
+    /// Selects the overall workspace layout shell.
+    ///
+    /// - `vscode_familiar`: VS Code / Cursor / Windsurf-style layout with a
+    ///   left activity bar, file tree on the left, AI panel on the right,
+    ///   and terminal on the bottom.
+    /// - `zed_native`: Upstream Zed layout with no left activity bar and
+    ///   command-palette-first ergonomics.
+    ///
+    /// Default: not set (behaves as `zed_native` until the user picks
+    /// during onboarding).
+    #[serde(rename = "ideer.layout_preset")]
+    pub ideer_layout_preset: Option<IdeerLayoutPresetContent>,
+
     /// Configuration for the collab panel visual settings.
     pub collaboration_panel: Option<PanelSettingsContent>,
 
@@ -427,6 +440,39 @@ impl strum::VariantNames for BaseKeymapContent {
         "Cursor",
         "None",
     ];
+}
+
+/// Workspace layout preset chosen during Ideer onboarding.
+///
+/// See [`SettingsContent::ideer_layout_preset`] for the JSON key
+/// (`ideer.layout_preset`).
+#[derive(
+    Copy,
+    Clone,
+    Debug,
+    Serialize,
+    Deserialize,
+    JsonSchema,
+    MergeFrom,
+    PartialEq,
+    Eq,
+    Default,
+    strum::VariantArray,
+)]
+#[serde(rename_all = "snake_case")]
+pub enum IdeerLayoutPresetContent {
+    /// VS Code / Cursor / Windsurf-familiar shell: left activity bar,
+    /// file tree anchored on the left, AI panel anchored on the right,
+    /// terminal docked at the bottom.
+    VscodeFamiliar,
+    /// Upstream Zed layout. No left activity bar, command-palette-first
+    /// ergonomics, lighter chrome.
+    #[default]
+    ZedNative,
+}
+
+impl strum::VariantNames for IdeerLayoutPresetContent {
+    const VARIANTS: &'static [&'static str] = &["VS Code Familiar", "Zed Native"];
 }
 
 /// Configuration of audio in Zed.

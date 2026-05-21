@@ -1,46 +1,54 @@
-# Zed
+# Ideer
 
-[![Zed](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/zed-industries/zed/main/assets/badge/v0.json)](https://zed.dev)
-[![CI](https://github.com/zed-industries/zed/actions/workflows/run_tests.yml/badge.svg)](https://github.com/zed-industries/zed/actions/workflows/run_tests.yml)
+Ideer is an AI-first code editor. It is a fork of [Zed](https://github.com/zed-industries/zed) with extra focus on agent and subagent workflows.
 
-Welcome to Zed, a high-performance, multiplayer code editor from the creators of [Atom](https://github.com/atom/atom) and [Tree-sitter](https://github.com/tree-sitter/tree-sitter).
+This repository is pre-release. There are no signed downloadable builds yet. To try Ideer today you build it from source.
 
----
+## Status
 
-### Installation
+- Source-only. No installer downloads, no auto-update server, no Ideer cloud, no Ideer account system.
+- The editor core, language support, project, terminal, git, debugger, and panel layout are inherited from upstream Zed and continue to track upstream.
+- The agent and subagent surfaces are where Ideer is being shaped. The product gaps are tracked in [`PRODUCT_GAPS.md`](./PRODUCT_GAPS.md).
+- Telemetry, billing, plan upsells, and Zed-cloud-only features are disabled in the UI when no real Ideer endpoint exists.
 
-On macOS, Linux, and Windows you can [download Zed directly](https://zed.dev/download) or install Zed via your local package manager ([macOS](https://zed.dev/docs/installation#macos)/[Linux](https://zed.dev/docs/linux#installing-via-a-package-manager)/[Windows](https://zed.dev/docs/windows#package-managers)).
+## How Ideer differs from Zed
 
-Other platforms are not yet available:
+- Branding and product identity are Ideer's. App display name, menus, and onboarding copy say "Ideer".
+- The deep-link URL scheme `ideer://` is registered alongside `zed://` for backwards compatibility.
+- Zed-cloud paid features (trials, plan upsells, account management against `zed.dev`) are hidden until an Ideer-owned equivalent exists.
+- AI provider configuration is BYOK. Bring your own API key for OpenAI, Anthropic, Google, OpenRouter, Ollama, LM Studio, or any other supported provider. Ideer does not ship a hosted model service.
+- Auto-update is disabled by default. Ideer does not have its own release/update server yet. Updates happen by rebuilding from this repository.
 
-- Web ([tracking issue](https://github.com/zed-industries/zed/issues/5396))
+## Building from source
 
-### Developing Zed
+- [Building on macOS](./docs/src/development/macos.md)
+- [Building on Linux](./docs/src/development/linux.md)
+- [Building on Windows](./docs/src/development/windows.md)
 
-- [Building Zed for macOS](./docs/src/development/macos.md)
-- [Building Zed for Linux](./docs/src/development/linux.md)
-- [Building Zed for Windows](./docs/src/development/windows.md)
+The build commands and toolchain are identical to upstream Zed. Most of those docs are still Zed-branded; treat the `zed` binary name and the `zed` crate name in build instructions as the same thing as Ideer for now.
 
-### Contributing
+## Configuring AI providers
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for ways you can contribute to Zed.
+Ideer reads provider credentials from settings. Open the settings file and add API keys for the providers you want to use. There is no required account, no required cloud service, and no required network connection beyond the provider you choose.
 
-Also... we're hiring! Check out our [jobs](https://zed.dev/jobs) page for open roles.
+If no provider is configured, the agent panel will tell you so and link to the relevant settings.
 
-### Licensing
+## Experimental areas
 
-License information for third party dependencies must be correctly provided for CI to pass.
+- Agent / subagent orchestration is being actively reshaped. Expect rough edges.
+- The first-run layout choice between a VS Code-familiar shell and a Zed-native shell is in design. See [`UI_LAYOUT_PRESETS.md`](./UI_LAYOUT_PRESETS.md).
+- Telemetry, sharing, and collaboration features inherited from Zed are not guaranteed to work end-to-end in Ideer.
 
-We use [`cargo-about`](https://github.com/EmbarkStudios/cargo-about) to automatically comply with open source licenses. If CI is failing, check the following:
+## License and attribution
 
-- Is it showing a `no license specified` error for a crate you've created? If so, add `publish = false` under `[package]` in your crate's Cargo.toml.
-- Is the error `failed to satisfy license requirements` for a dependency? If so, first determine what license the project has and whether this system is sufficient to comply with this license's requirements. If you're unsure, ask a lawyer. Once you've verified that this system is acceptable add the license's SPDX identifier to the `accepted` array in `script/licenses/zed-licenses.toml`.
-- Is `cargo-about` unable to find the license for a dependency? If so, add a clarification field at the end of `script/licenses/zed-licenses.toml`, as specified in the [cargo-about book](https://embarkstudios.github.io/cargo-about/cli/generate/config.html#crate-configuration).
+Ideer is a fork of Zed. Upstream Zed is developed by Zed Industries, Inc. and is available at https://github.com/zed-industries/zed.
 
-## Sponsorship
+This repository preserves the upstream license files:
 
-Zed is developed by **Zed Industries, Inc.**, a for-profit company.
+- [LICENSE-AGPL](./LICENSE-AGPL)
+- [LICENSE-APACHE](./LICENSE-APACHE)
+- [LICENSE-GPL](./LICENSE-GPL)
 
-If you’d like to financially support the project, you can do so via GitHub Sponsors.
-Sponsorships go directly to Zed Industries and are used as general company revenue.
-There are no perks or entitlements associated with sponsorship.
+When you redistribute binaries built from this repository, you must comply with the same license obligations as upstream Zed. Third-party license generation continues to use [`cargo-about`](https://github.com/EmbarkStudios/cargo-about); see [`script/licenses/zed-licenses.toml`](./script/licenses/zed-licenses.toml) for the accepted-license configuration.
+
+If you are looking for the upstream Zed editor product, downloadable builds, support, billing, or the Zed community, please go to [zed.dev](https://zed.dev) and [github.com/zed-industries/zed](https://github.com/zed-industries/zed). Ideer is a separate fork and is not affiliated with Zed Industries, Inc.

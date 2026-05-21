@@ -1232,7 +1232,7 @@ impl ThreadView {
                 ThreadError::PaymentRequired => (
                     "payment_required",
                     None,
-                    "You reached your free usage limit. Upgrade to Zed Pro for more prompts."
+                    "You reached your free usage limit. Upgrade to Ideer Pro for more prompts."
                         .into(),
                 ),
                 ThreadError::Refusal => {
@@ -8400,7 +8400,7 @@ impl ThreadView {
 
     fn render_payment_required_error(&self, cx: &mut Context<Self>) -> Callout {
         const ERROR_MESSAGE: &str =
-            "You reached your free usage limit. Upgrade to Zed Pro for more prompts.";
+            "You reached your free usage limit. Upgrade to Ideer Pro for more prompts.";
 
         Callout::new()
             .severity(Severity::Error)
@@ -8489,7 +8489,9 @@ impl ThreadView {
             .on_click(cx.listener({
                 move |this, _, _, cx| {
                     this.clear_thread_error(cx);
-                    cx.open_url(&zed_urls::upgrade_to_zed_pro_url(cx));
+                    if let Some(url) = zed_urls::upgrade_to_zed_pro_url(cx) {
+                        cx.open_url(&url);
+                    }
                 }
             }))
     }

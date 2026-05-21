@@ -416,7 +416,7 @@ impl PaneLeaderDecorator for PaneRenderContext<'_> {
                         }
                     }
                     ParticipantLocation::UnsharedProject => Some(Label::new(format!(
-                        "{} is viewing an unshared Zed project",
+                        "{} is viewing an unshared Ideer project",
                         leader.user.github_login
                     ))),
                     ParticipantLocation::External => Some(Label::new(format!(

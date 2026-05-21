@@ -177,6 +177,9 @@ impl VsCodeSettings {
             audio: None,
             auto_update: None,
             base_keymap: Some(BaseKeymapContent::VSCode),
+            // Imported VS Code users get the VS Code-familiar shell so
+            // their previous mental model translates over.
+            ideer_layout_preset: Some(settings_content::IdeerLayoutPresetContent::VscodeFamiliar),
             calls: None,
             collaboration_panel: None,
             credentials_url: None,

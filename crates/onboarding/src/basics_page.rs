@@ -20,6 +20,10 @@ use ui::{
     prelude::*,
 };
 use vim_mode_setting::VimModeSetting;
+use workspace::ideer_layout::{
+    IdeerLayoutPreset, IdeerLayoutSettings, apply_vscode_familiar_layout,
+};
+use workspace::with_active_or_new_workspace;
 
 use crate::{
     ImportCursorSettings, ImportVsCodeSettings, SettingsImportState,
@@ -250,7 +254,7 @@ fn render_telemetry_section(tab_index: &mut isize, cx: &App) -> impl IntoElement
             SwitchField::new(
                 "onboarding-telemetry-metrics",
                 None::<&str>,
-                Some("Help improve Zed by sending anonymous usage data".into()),
+                Some("Help improve Ideer by sending anonymous usage data".into()),
                 if TelemetrySettings::get_global(cx).metrics {
                     ui::ToggleState::Selected
                 } else {
@@ -290,7 +294,7 @@ fn render_telemetry_section(tab_index: &mut isize, cx: &App) -> impl IntoElement
                 "onboarding-telemetry-crash-reports",
                 None::<&str>,
                 Some(
-                    "Help fix Zed by sending crash reports so we can fix critical issues fast"
+                    "Help fix Ideer by sending crash reports so we can fix critical issues fast"
                         .into(),
                 ),
                 if TelemetrySettings::get_global(cx).diagnostics {
@@ -431,12 +435,12 @@ fn render_worktree_auto_trust_switch(tab_index: &mut isize, cx: &mut App) -> imp
         ui::ToggleState::Unselected
     };
 
-    let tooltip_description = "Zed can only allow services like language servers, project settings, and MCP servers to run after you mark a new project as trusted.";
+    let tooltip_description = "Ideer can only allow services like language servers, project settings, and MCP servers to run after you mark a new project as trusted.";
 
     SwitchField::new(
         "onboarding-auto-trust-worktrees",
         Some("Trust All Projects By Default"),
-        Some("Automatically mark all new projects as trusted to unlock all Zed's features".into()),
+        Some("Automatically mark all new projects as trusted to unlock all Ideer's features".into()),
         toggle_state,
         {
             let fs = <dyn Fs>::global(cx);
@@ -634,14 +638,16 @@ fn render_zed_agent_button(user_store: &Entity<UserStore>, cx: &mut App) -> impl
                 .size(IconSize::XSmall)
                 .color(Color::Muted),
         )
-        .name("Zed Agent")
+        .name("Ideer Agent")
         .state(state_element)
         .disabled(is_trial || is_pro)
         .map(|this| {
             if is_signed_in && is_free {
                 this.on_click(move |_, _window, cx| {
                     telemetry::event!("Start Trial Clicked", state = "post-sign-in");
-                    cx.open_url(&zed_urls::start_trial_url(cx))
+                    if let Some(url) = zed_urls::start_trial_url(cx) {
+                        cx.open_url(&url);
+                    }
                 })
             } else {
                 this.on_click(move |_, _, cx| {
@@ -695,6 +701,78 @@ fn render_ai_section(user_store: &Entity<UserStore>, cx: &mut App) -> impl IntoE
         .child(grid)
 }
 
+fn render_layout_preset_section(tab_index: &mut isize, cx: &mut App) -> impl IntoElement {
+    let preset = IdeerLayoutSettings::get_global(cx).preset;
+    let selected_index = match preset {
+        IdeerLayoutPreset::VscodeFamiliar => Some(0),
+        IdeerLayoutPreset::ZedNative => Some(1),
+    };
+
+    v_flex()
+        .gap_2()
+        .child(Label::new("Shell Layout"))
+        .child(
+            Label::new(
+                "Pick how Ideer's workspace looks on first launch. \
+                 You can change this later in settings.",
+            )
+            .size(LabelSize::Small)
+            .color(Color::Muted),
+        )
+        .child(
+            ToggleButtonGroup::single_row(
+                "ideer-layout-preset-selection",
+                [
+                    ToggleButtonWithIcon::new(
+                        "VS Code Familiar",
+                        IconName::EditorVsCode,
+                        |_, _, cx| {
+                            write_layout_preset(IdeerLayoutPreset::VscodeFamiliar, cx);
+                            with_active_or_new_workspace(cx, |workspace, window, cx| {
+                                if let Err(err) =
+                                    apply_vscode_familiar_layout(workspace, window, cx)
+                                {
+                                    workspace.show_error(&err, cx);
+                                }
+                            });
+                        },
+                    ),
+                    ToggleButtonWithIcon::new(
+                        "Zed Native",
+                        IconName::ZedAssistant,
+                        |_, _, cx| {
+                            write_layout_preset(IdeerLayoutPreset::ZedNative, cx);
+                        },
+                    ),
+                ],
+            )
+            .when_some(selected_index, |this, idx| this.selected_index(idx))
+            .full_width()
+            .tab_index(tab_index)
+            .size(ToggleButtonGroupSize::Medium)
+            .style(ui::ToggleButtonGroupStyle::Outlined),
+        )
+}
+
+fn write_layout_preset(preset: IdeerLayoutPreset, cx: &App) {
+    let fs = <dyn Fs>::global(cx);
+    let value = match preset {
+        IdeerLayoutPreset::VscodeFamiliar => settings::IdeerLayoutPresetContent::VscodeFamiliar,
+        IdeerLayoutPreset::ZedNative => settings::IdeerLayoutPresetContent::ZedNative,
+    };
+    update_settings_file(fs, cx, move |setting, _| {
+        setting.ideer_layout_preset = Some(value);
+    });
+
+    telemetry::event!(
+        "Welcome Layout Preset Selected",
+        preset = match preset {
+            IdeerLayoutPreset::VscodeFamiliar => "vscode_familiar",
+            IdeerLayoutPreset::ZedNative => "zed_native",
+        }
+    );
+}
+
 pub(crate) fn render_basics_page(user_store: &Entity<UserStore>, cx: &mut App) -> impl IntoElement {
     let mut tab_index = 0;
 
@@ -702,6 +780,7 @@ pub(crate) fn render_basics_page(user_store: &Entity<UserStore>, cx: &mut App) -
         .id("basics-page")
         .gap_6()
         .child(render_theme_section(&mut tab_index, cx))
+        .child(render_layout_preset_section(&mut tab_index, cx))
         .child(render_base_keymap_section(&mut tab_index, cx))
         .child(render_ai_section(user_store, cx))
         .child(render_import_settings_section(&mut tab_index, cx))

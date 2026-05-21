@@ -1129,20 +1129,8 @@ impl EditPredictionButton {
                             })
                             .detach();
                     })
-                    .link_with_handler(
-                        "Learn More",
-                        OpenBrowser {
-                            url: zed_urls::edit_prediction_docs(cx),
-                        }
-                        .boxed_clone(),
-                        |_window, _cx| {
-                            telemetry::event!(
-                                "Edit Prediction Menu Action",
-                                action = "view_docs",
-                                source = "upsell",
-                            );
-                        },
-                    )
+                    // TODO(ideer-rename): re-add "Learn More" link once
+                    // Ideer-owned edit-prediction docs exist.
                     .separator();
             } else {
                 let mercury_payment_required = matches!(provider, EditPredictionProvider::Mercury)
@@ -1199,7 +1187,11 @@ impl EditPredictionButton {
                                     )
                                     .into_any_element()
                             },
-                            move |_, cx| cx.open_url(&zed_urls::account_url(cx)),
+                            move |_, cx| {
+                                if let Some(url) = zed_urls::account_url(cx) {
+                                    cx.open_url(&url);
+                                }
+                            },
                         )
                         .when(usage.over_limit(), |menu| -> ContextMenu {
                             menu.entry("Subscribe to increase your limit", None, |_window, cx| {
@@ -1208,7 +1200,9 @@ impl EditPredictionButton {
                                     action = "upsell_clicked",
                                     reason = "usage_limit",
                                 );
-                                cx.open_url(&zed_urls::account_url(cx))
+                                if let Some(url) = zed_urls::account_url(cx) {
+                                    cx.open_url(&url);
+                                }
                             })
                         })
                         .separator();
@@ -1221,15 +1215,21 @@ impl EditPredictionButton {
                                     .color(Color::Warning)
                                     .into_any_element()
                             },
-                            |_window, cx| cx.open_url(&zed_urls::account_url(cx)),
+                            |_window, cx| {
+                                if let Some(url) = zed_urls::account_url(cx) {
+                                    cx.open_url(&url);
+                                }
+                            },
                         )
-                        .entry("Upgrade to Zed Pro or contact us.", None, |_window, cx| {
+                        .entry("Upgrade to Ideer Pro or contact us.", None, |_window, cx| {
                             telemetry::event!(
                                 "Edit Prediction Menu Action",
                                 action = "upsell_clicked",
                                 reason = "account_age",
                             );
-                            cx.open_url(&zed_urls::account_url(cx))
+                            if let Some(url) = zed_urls::account_url(cx) {
+                                cx.open_url(&url);
+                            }
                         })
                         .separator();
                 } else if self.user_store.read(cx).has_overdue_invoices() {
@@ -1242,14 +1242,22 @@ impl EditPredictionButton {
                                     .into_any_element()
                             },
                             |_window, cx| {
-                                cx.open_url(&zed_urls::account_url(cx))
+                                if let Some(url) = zed_urls::account_url(cx) {
+                                    cx.open_url(&url);
+                                }
                             },
                         )
+                        // TODO(ideer-rename): point this at an
+                        // Ideer-owned billing support contact once one
+                        // exists. The old billing-support@zed.dev email
+                        // is intentionally removed.
                         .entry(
-                            "Check your payment status or contact us at billing-support@zed.dev to continue using this feature.",
+                            "Check your payment status to continue using this feature.",
                             None,
                             |_window, cx| {
-                                cx.open_url(&zed_urls::account_url(cx))
+                                if let Some(url) = zed_urls::account_url(cx) {
+                                    cx.open_url(&url);
+                                }
                             },
                         )
                         .separator();

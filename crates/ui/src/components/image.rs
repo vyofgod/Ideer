@@ -15,6 +15,7 @@ use crate::traits::transformable::Transformable;
 pub enum VectorName {
     BusinessStamp,
     Grid,
+    IdeerLogo,
     ProTrialStamp,
     ProUserStamp,
     StudentStamp,

@@ -218,7 +218,9 @@ pub fn init(cx: &mut App) {
     })
     .on_action(|_: &OpenAccountSettings, cx| {
         with_active_or_new_workspace(cx, |_, _, cx| {
-            cx.open_url(&zed_urls::account_url(cx));
+            if let Some(url) = zed_urls::account_url(cx) {
+                cx.open_url(&url);
+            }
         });
     })
     .on_action(|_: &OpenTasks, cx| {
@@ -1089,7 +1091,7 @@ fn register_actions(
                         Toast::new(
                             NotificationId::unique::<RegisterZedScheme>(),
                             format!(
-                                "zed:// links will now open in {}.",
+                                "ideer:// links will now open in {}.",
                                 ReleaseChannel::global(cx).display_name()
                             ),
                         ),
@@ -1099,7 +1101,7 @@ fn register_actions(
                 Ok(())
             })
             .detach_and_prompt_err(
-                "Error registering zed:// scheme",
+                "Error registering ideer:// scheme",
                 window,
                 cx,
                 |_, _, _| None,
@@ -1533,7 +1535,7 @@ fn open_about_window(cx: &mut App) {
     cx.open_window(
         WindowOptions {
             titlebar: Some(TitlebarOptions {
-                title: Some("About Zed".into()),
+                title: Some("About Ideer".into()),
                 appears_transparent: true,
                 traffic_light_position: Some(point(px(12.), px(12.))),
             }),

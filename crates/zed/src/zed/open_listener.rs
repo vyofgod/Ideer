@@ -140,6 +140,12 @@ impl OpenRequest {
         }
 
         for url in request.urls {
+            // Accept both the `ideer://` (primary) and `zed://` (legacy
+            // upstream) deep-link schemes. New shared / generated links
+            // use `ideer://`; existing links pasted by users or stored
+            // in older data may still arrive with `zed://`.
+            let app_scheme_path = strip_app_scheme(&url);
+
             if let Some(server_name) = url.strip_prefix("zed-cli://") {
                 this.kind = Some(OpenRequestKind::CliConnection(connect_to_cli(server_name)?));
             } else if let Some(action_index) = url.strip_prefix("zed-dock-action://") {
@@ -148,16 +154,20 @@ impl OpenRequest {
                 });
             } else if let Some(file) = url.strip_prefix("file://") {
                 this.parse_file_path(file)
-            } else if let Some(file) = url.strip_prefix("zed://file") {
+            } else if let Some(file) = app_scheme_path.and_then(|p| p.strip_prefix("file")) {
                 this.parse_file_path(file)
-            } else if let Some(file) = url.strip_prefix("zed://ssh") {
+            } else if let Some(file) = app_scheme_path.and_then(|p| p.strip_prefix("ssh")) {
                 let ssh_url = "ssh:/".to_string() + file;
                 this.parse_ssh_file_path(&ssh_url, cx)?
-            } else if let Some(extension_id) = url.strip_prefix("zed://extension/") {
+            } else if let Some(extension_id) =
+                app_scheme_path.and_then(|p| p.strip_prefix("extension/"))
+            {
                 this.kind = Some(OpenRequestKind::Extension {
                     extension_id: extension_id.to_string(),
                 });
-            } else if let Some(session_id_str) = url.strip_prefix("zed://agent/shared/") {
+            } else if let Some(session_id_str) =
+                app_scheme_path.and_then(|p| p.strip_prefix("agent/shared/"))
+            {
                 if uuid::Uuid::parse_str(session_id_str).is_ok() {
                     this.kind = Some(OpenRequestKind::SharedAgentThread {
                         session_id: session_id_str.to_string(),
@@ -165,21 +175,29 @@ impl OpenRequest {
                 } else {
                     log::error!("Invalid session ID in URL: {}", session_id_str);
                 }
-            } else if let Some(agent_path) = url.strip_prefix("zed://agent") {
+            } else if let Some(agent_path) = app_scheme_path.and_then(|p| p.strip_prefix("agent")) {
                 this.parse_agent_url(agent_path)
-            } else if let Some(schema_path) = url.strip_prefix("zed://schemas/") {
+            } else if let Some(schema_path) =
+                app_scheme_path.and_then(|p| p.strip_prefix("schemas/"))
+            {
                 this.kind = Some(OpenRequestKind::BuiltinJsonSchema {
                     schema_path: schema_path.to_string(),
                 });
-            } else if url == "zed://settings" || url == "zed://settings/" {
+            } else if matches!(app_scheme_path, Some("settings") | Some("settings/")) {
                 this.kind = Some(OpenRequestKind::Setting { setting_path: None });
-            } else if let Some(setting_path) = url.strip_prefix("zed://settings/") {
+            } else if let Some(setting_path) =
+                app_scheme_path.and_then(|p| p.strip_prefix("settings/"))
+            {
                 this.kind = Some(OpenRequestKind::Setting {
                     setting_path: Some(setting_path.to_string()),
                 });
-            } else if let Some(clone_path) = url.strip_prefix("zed://git/clone") {
+            } else if let Some(clone_path) =
+                app_scheme_path.and_then(|p| p.strip_prefix("git/clone"))
+            {
                 this.parse_git_clone_url(clone_path)?
-            } else if let Some(commit_path) = url.strip_prefix("zed://git/commit/") {
+            } else if let Some(commit_path) =
+                app_scheme_path.and_then(|p| p.strip_prefix("git/commit/"))
+            {
                 this.parse_git_commit_url(commit_path)?
             } else if url.starts_with("ssh://") {
                 this.parse_ssh_file_path(&url, cx)?
@@ -320,6 +338,15 @@ impl OpenListener {
             .context("no listener for open requests")
             .log_err();
     }
+}
+
+/// Strip a recognized app URL scheme prefix (`ideer://` or the legacy
+/// `zed://`) and return the remainder. Returns `None` if `url` uses
+/// neither scheme. Keeps the two schemes in sync so a single match
+/// chain in `OpenRequest::parse` handles both.
+fn strip_app_scheme(url: &str) -> Option<&str> {
+    url.strip_prefix("ideer://")
+        .or_else(|| url.strip_prefix("zed://"))
 }
 
 #[cfg(any(target_os = "linux", target_os = "freebsd"))]
@@ -1017,6 +1044,58 @@ mod tests {
                 assert_eq!(external_source_prompt, None);
             }
             _ => panic!("Expected AgentPanel kind"),
+        }
+    }
+
+    #[gpui::test]
+    fn test_parse_agent_url_accepts_ideer_scheme(cx: &mut TestAppContext) {
+        // The `ideer://` scheme is the primary Ideer deep-link scheme;
+        // the legacy `zed://` scheme is still accepted (see other
+        // tests). This test pins the new scheme so a future change to
+        // the parser does not silently drop it.
+        let _app_state = init_test(cx);
+
+        let request = cx.update(|cx| {
+            OpenRequest::parse(
+                RawOpenRequest {
+                    urls: vec!["ideer://agent".into()],
+                    ..Default::default()
+                },
+                cx,
+            )
+            .unwrap()
+        });
+
+        match request.kind {
+            Some(OpenRequestKind::AgentPanel {
+                external_source_prompt,
+            }) => {
+                assert_eq!(external_source_prompt, None);
+            }
+            _ => panic!("Expected AgentPanel kind"),
+        }
+    }
+
+    #[gpui::test]
+    fn test_parse_settings_url_accepts_ideer_scheme(cx: &mut TestAppContext) {
+        let _app_state = init_test(cx);
+
+        let request = cx.update(|cx| {
+            OpenRequest::parse(
+                RawOpenRequest {
+                    urls: vec!["ideer://settings".into()],
+                    ..Default::default()
+                },
+                cx,
+            )
+            .unwrap()
+        });
+
+        match request.kind {
+            Some(OpenRequestKind::Setting { setting_path }) => {
+                assert_eq!(setting_path, None);
+            }
+            _ => panic!("Expected Setting kind"),
         }
     }
 

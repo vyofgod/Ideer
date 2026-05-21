@@ -1,6 +1,7 @@
 pub mod active_file_name;
 pub mod dock;
 pub mod history_manager;
+pub mod ideer_layout;
 pub mod invalid_item_view;
 pub mod item;
 mod modal_layer;
@@ -767,6 +768,8 @@ pub fn init(app_state: Arc<AppState>, cx: &mut App) {
     theme_preview::init(cx);
     toast_layer::init(cx);
     history_manager::init(app_state.fs.clone(), cx);
+    // `IdeerLayoutSettings` is auto-registered by the `RegisterSetting`
+    // derive in `crates/workspace/src/ideer_layout.rs`.
 
     cx.on_action(|_: &CloseWindow, cx| Workspace::close_global(cx))
         .on_action(|_: &Reload, cx| reload(cx))
@@ -8390,7 +8393,9 @@ impl Render for Workspace {
                                 ))
                             })
                             .child({
-                                match bottom_dock_layout {
+                                let activity_bar =
+                                    ideer_layout::render_activity_bar(self, window, cx);
+                                let inner = match bottom_dock_layout {
                                     BottomDockLayout::Full => div()
                                         .flex()
                                         .flex_col()
@@ -8628,6 +8633,24 @@ impl Render for Workspace {
                                             window,
                                             cx,
                                         )),
+                                };
+                                // When the Ideer VS Code-familiar
+                                // preset is active, wrap the workspace
+                                // body in a horizontal flex and
+                                // prepend the left activity bar.
+                                // Returns an `AnyElement` so both
+                                // branches type-unify.
+                                if let Some(activity_bar) = activity_bar {
+                                    div()
+                                        .flex()
+                                        .flex_row()
+                                        .h_full()
+                                        .w_full()
+                                        .child(activity_bar)
+                                        .child(inner.flex_1())
+                                        .into_any_element()
+                                } else {
+                                    inner.into_any_element()
                                 }
                             })
                             .children(self.zoomed.as_ref().and_then(|view| {
@@ -9246,7 +9269,7 @@ pub fn join_channel(
                         let detail: SharedString = match err.error_code() {
                             ErrorCode::SignedOut => "Please sign in to continue.".into(),
                             ErrorCode::UpgradeRequired => concat!(
-                                "Your are running an unsupported version of Zed. ",
+                                "Your are running an unsupported version of Ideer. ",
                                 "Please update to continue."
                             )
                             .into(),

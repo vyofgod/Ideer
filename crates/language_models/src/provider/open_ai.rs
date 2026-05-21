@@ -573,7 +573,7 @@ impl Render for ConfigurationView {
                             .size(IconSize::XSmall)
                             .color(Color::Muted),
                     )
-                    .child(Label::new("Zed also supports OpenAI-compatible models.")),
+                    .child(Label::new("Ideer also supports OpenAI-compatible models.")),
             )
             .child(
                 Button::new("docs", "Learn More")

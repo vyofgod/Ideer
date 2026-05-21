@@ -1461,6 +1461,10 @@ impl ExtensionsPage {
     }
 
     fn render_acp_registry_upsell(&self, cx: &mut Context<Self>) -> impl IntoElement {
+        // TODO(ideer-rename): the "Learn More" link previously pointed
+        // at the upstream Zed ACP registry blog post; hidden until an
+        // Ideer-owned destination exists. The "View Registry" button
+        // dispatches a local action and remains visible.
         let registry_url = zed_urls::acp_registry_blog(cx);
 
         let view_registry = Button::new("view_registry", "View Registry")
@@ -1476,22 +1480,24 @@ impl ExtensionsPage {
                     window.dispatch_action(Box::new(zed_actions::AcpRegistry), cx)
                 }
             });
-        let open_registry_button = Button::new("open_registry", "Learn More")
-            .end_icon(
-                Icon::new(IconName::ArrowUpRight)
-                    .size(IconSize::Small)
-                    .color(Color::Muted),
-            )
-            .on_click({
-                move |_event, _window, cx| {
-                    telemetry::event!(
-                        "ACP Registry Viewed",
-                        source = "ACP Registry Upsell",
-                        url = registry_url,
-                    );
-                    cx.open_url(&registry_url)
-                }
-            });
+        let open_registry_button = registry_url.map(|registry_url| {
+            Button::new("open_registry", "Learn More")
+                .end_icon(
+                    Icon::new(IconName::ArrowUpRight)
+                        .size(IconSize::Small)
+                        .color(Color::Muted),
+                )
+                .on_click({
+                    move |_event, _window, cx| {
+                        telemetry::event!(
+                            "ACP Registry Viewed",
+                            source = "ACP Registry Upsell",
+                            url = registry_url,
+                        );
+                        cx.open_url(&registry_url)
+                    }
+                })
+        });
 
         div().pt_4().px_4().child(
             Banner::new()
@@ -1505,7 +1511,7 @@ impl ExtensionsPage {
                 .action_slot(
                     h_flex()
                         .gap_1()
-                        .child(open_registry_button)
+                        .children(open_registry_button)
                         .child(view_registry),
                 ),
         )

@@ -1,7 +1,7 @@
 use ai_onboarding::YoungAccountBanner;
 use anyhow::Result;
 use client::Status;
-use client::{Client, RefreshLlmTokenListener, UserStore, global_llm_token, zed_urls};
+use client::{Client, RefreshLlmTokenListener, UserStore, global_llm_token};
 use cloud_api_client::LlmApiToken;
 use cloud_api_types::OrganizationId;
 use cloud_api_types::Plan;
@@ -20,7 +20,7 @@ use settings::SettingsStore;
 pub use settings::ZedDotDevAvailableModel as AvailableModel;
 pub use settings::ZedDotDevAvailableProvider as AvailableProvider;
 use std::sync::Arc;
-use ui::{TintColor, prelude::*};
+use ui::prelude::*;
 
 const PROVIDER_ID: LanguageModelProviderId = ZED_CLOUD_PROVIDER_ID;
 const PROVIDER_NAME: LanguageModelProviderName = ZED_CLOUD_PROVIDER_NAME;
@@ -287,6 +287,10 @@ struct ZedAiConfiguration {
     is_connected: bool,
     plan: Option<Plan>,
     is_zed_model_provider_enabled: bool,
+    // TODO(ideer-rename): unused while the trial / upgrade buttons are
+    // hidden in Ideer. Restored once an Ideer-owned billing surface
+    // exists.
+    #[allow(dead_code)]
     eligible_for_trial: bool,
     account_too_young: bool,
     sign_in_callback: Arc<dyn Fn(&mut Window, &mut App) + Send + Sync>,
@@ -309,49 +313,43 @@ impl RenderOnce for ZedAiConfiguration {
             ),
             Some(Plan::ZedBusiness) => (
                 if self.is_zed_model_provider_enabled {
-                    "You have access to Zed's hosted models through your organization."
+                    "You have access to Ideer's hosted models through your organization."
                 } else {
-                    "Zed's hosted models are disabled by your organization's configuration."
+                    "Ideer's hosted models are disabled by your organization's configuration."
                 },
                 true,
             ),
             Some(Plan::ZedFree) | None => (
-                if self.eligible_for_trial {
-                    "Subscribe for access to Zed's hosted models. Start with a 14 day free trial."
-                } else {
-                    "Subscribe for access to Zed's hosted models."
-                },
+                // TODO(ideer-rename): Ideer does not host its own AI
+                // service. Restore subscription / trial copy here once
+                // an Ideer-owned plan exists.
+                "Ideer does not host its own AI service. Configure an API key for OpenAI, Anthropic, Google, OpenRouter, Ollama, or another supported provider in Settings.",
                 false,
             ),
         };
 
-        let manage_subscription_buttons = if has_paid_plan {
-            Button::new("manage_settings", "Manage Subscription")
-                .full_width()
-                .label_size(LabelSize::Small)
-                .style(ButtonStyle::Tinted(TintColor::Accent))
-                .on_click(|_, _, cx| cx.open_url(&zed_urls::account_url(cx)))
-                .into_any_element()
-        } else if self.plan.is_none() || self.eligible_for_trial {
-            Button::new("start_trial", "Start 14-day Free Pro Trial")
-                .full_width()
-                .style(ui::ButtonStyle::Tinted(ui::TintColor::Accent))
-                .on_click(|_, _, cx| cx.open_url(&zed_urls::start_trial_url(cx)))
-                .into_any_element()
-        } else {
-            Button::new("upgrade", "Upgrade to Pro")
-                .full_width()
-                .style(ui::ButtonStyle::Tinted(ui::TintColor::Accent))
-                .on_click(|_, _, cx| cx.open_url(&zed_urls::upgrade_to_zed_pro_url(cx)))
-                .into_any_element()
-        };
+        // TODO(ideer-rename): Ideer does not currently host its own
+        // account, billing, or trial system. The "Manage Subscription",
+        // "Start 14-day Free Pro Trial", and "Upgrade to Pro" buttons
+        // that used to point at zed.dev are hidden until an Ideer-owned
+        // billing destination exists. The placeholder element below
+        // renders nothing so the surrounding layout still compiles.
+        let manage_subscription_buttons = gpui::Empty.into_any_element();
+        let _ = has_paid_plan;
 
         if !self.is_connected {
             return v_flex()
                 .gap_2()
-                .child(Label::new("Sign in to have access to Zed's complete agentic experience with hosted models."))
+                .child(Label::new(
+                    // TODO(ideer-rename): Ideer does not currently host
+                    // its own AI models. Sign-in still authenticates
+                    // against the upstream Zed account flow if the
+                    // server_url setting points there, but no hosted
+                    // models are guaranteed to be available.
+                    "Sign in to enable agentic features. Ideer does not host its own AI service; configure an API key for a supported provider in Settings to use the agent without signing in.",
+                ))
                 .child(
-                    Button::new("sign_in", "Sign In to use Zed AI")
+                    Button::new("sign_in", "Sign In to use Ideer AI")
                         .start_icon(Icon::new(IconName::Github).size(IconSize::Small).color(Color::Muted))
                         .full_width()
                         .on_click({
@@ -363,12 +361,9 @@ impl RenderOnce for ZedAiConfiguration {
 
         v_flex().gap_2().w_full().map(|this| {
             if self.account_too_young {
-                this.child(YoungAccountBanner).child(
-                    Button::new("upgrade", "Upgrade to Pro")
-                        .style(ui::ButtonStyle::Tinted(ui::TintColor::Accent))
-                        .full_width()
-                        .on_click(|_, _, cx| cx.open_url(&zed_urls::upgrade_to_zed_pro_url(cx))),
-                )
+                // TODO(ideer-rename): re-add an upgrade button once an
+                // Ideer-owned billing destination exists.
+                this.child(YoungAccountBanner)
             } else {
                 this.text_sm()
                     .child(subscription_text)
